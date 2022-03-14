@@ -6,12 +6,14 @@
 import logging
 import shlex
 import subprocess
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 
 
 logger = logging.getLogger(__name__)
 
 # pylint: disable=inconsistent-return-statements
+
+
 def exec_subprocess(cmd, shell=False, output=False):
     """
     Executes a command
@@ -173,3 +175,31 @@ def exec_subprocess_in_background(cmd, shell=False, wait_for_exit_code=False):
         return 1
 
     return 0
+
+def exec_async_commands(cmd, stdout=DEVNULL, stderr=DEVNULL):
+    """
+    executes server related commands
+
+    Parameters
+    ----------
+    cmd : str
+        command to be executed
+    stdout : File
+        temp file(usually) to store the output (Default value = subprocess.DEVNULL)
+    stderr : File
+        temp file(usually) to store errors, if any (Default value = subprocess.DEVNULL)
+
+    Returns
+    -------
+    int
+        Return code received after executing the command
+    """
+    proc = Popen(shlex.split(cmd), stdout=stdout, stderr=stderr)
+    logger.trace(cmd)
+    try:
+        proc.poll()
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        stderr.write(b"Connection timeout")
+
+    return proc.returncode
