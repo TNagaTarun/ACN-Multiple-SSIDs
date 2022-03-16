@@ -61,3 +61,11 @@ def delete_namespaces():
         logger.info("Cleaned up environment!")
     else:
         logger.info("Namespaces not deleted")
+
+@atexit.register
+def delete_wlans():
+    """
+    Remove wireless interfaces
+    """
+    if config.get_value("delete_wlans_on_termination"):
+        engine.unload_hwsim()

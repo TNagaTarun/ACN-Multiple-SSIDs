@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # pylint: disable=too-many-arguments
 
 
-class Wlan(Device):
+class Wlan:
     """
     This is a wireless device, used in wireless interfaces.
 
@@ -55,7 +55,9 @@ class Wlan(Device):
             The channel frequency (MHz) at which the interface communicates.
         """
 
-        super().__init__(name, node_id)
+        # super().__init__(name, node_id)
+        self._name = name
+        self._node_id = node_id
         self._address = None
         self._type = wlan_type
         self._ssid = ssid
@@ -129,11 +131,13 @@ class Wlan(Device):
         """
         Getter for the name of the wireless interface, like 'wlan0', 'wlan1' etc.
         """
-        return super().name
+        # return super().name
+        return self._name
 
     @property
     def node_id(self):
         """
         Getter for the id of the node that the wireless interface is present in.
         """
-        return super().node_id
+        # return super().node_id
+        return self._node_id
