@@ -5,13 +5,10 @@ import nest.config as config
 # Emulating wireless networks, with reusing of wireless interfaces
 ##############################
 
-# Define 2 namespaces
-config.set_value("assign_random_names", False)
-config.set_value("delete_namespaces_on_termination", False)
-config.set_value("delete_wlans_on_termination", False)
-n1 = Node("n1")
-n2 = Node("n2")
-n3 = Node("n3")
+# Define 3 namespaces
+n1 = Node('n1')
+n2 = Node('n2')
+n3 = Node('n3')
 
 # Configure the maximum number of wireless interfaces that will be used in the topology.
 # It is 10 by default.

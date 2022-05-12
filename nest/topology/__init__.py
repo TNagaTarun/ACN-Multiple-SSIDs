@@ -25,6 +25,8 @@ from .node import Node
 from .router import Router
 from .switch import Switch
 from .wireless_interface import *
+from .access_point import AccessPoint
+from .wifi_station import WifiStation
 
 # pylint: disable=cyclic-import
 from .connect import connect

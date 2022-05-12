@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-only
-# Copyright (c) 2019-2021 NITK Surathkal
+# Copyright (c) 2019-2022 NITK Surathkal
 
 """API related to wireless interfaces in topology"""
 
+from nest.topology import Node
 import logging
 import time
 from nest import engine
@@ -123,7 +124,7 @@ class WirelessInterface:
         """
 
         count = config.get_value("max_wireless_interface_count")
-        print("Count of wireless interfaces being created : ", count)
+        logger.info(f"Count of wireless interfaces being created : {count}")
         engine.unload_hwsim()
         engine.load_hwsim(count)
 
@@ -214,7 +215,7 @@ class WirelessInterface:
 
 
     @classmethod
-    def leave_network(cls, node_id):
+    def leave_network(cls, node_id, node_name):
         """
         Make this interface leave the wireless network that it is part of.
         The interface could be an AP, a BSS station or an Ad hoc network station.
@@ -235,7 +236,7 @@ class WirelessInterface:
             interface.leave_ibss()
             return
 
-        raise ValueError(f"Namespace with id {node_id} isn't part of a wireless network")
+        raise ValueError(f"Namespace with name {node_name} isn't part of a wireless network")
 
     def delete_ap(self):
         """
@@ -248,7 +249,7 @@ class WirelessInterface:
             raise ValueError(f"Namespace with id {self.node_id} is not an Access Point.")
 
         # Remove all the stations of this BSS.
-        print("Warning: Since you are removing an AP, all its stations will also get disconnected.")
+        logger.info("Since you are removing an AP, all its stations will also get disconnected.")
         stations = WirelessTopologyMap.get_bss_stations(self)
         for station in stations:
             station.leave_bss()
@@ -276,7 +277,7 @@ class WirelessInterface:
         WirelessTopologyMap.remove_station_from_ibss(self)
         self.free_wireless_interface()
 
-def check_network_and_leave(node_id):
+def check_network_and_leave(node_id, node_name):
     """
     Check if the given node is part of a wireless network, and if yes, leave that network.
 
@@ -286,9 +287,9 @@ def check_network_and_leave(node_id):
         Name of the node
     """
     if WirelessTopologyMap.is_part_of_network(node_id):
-        print(f"Warning: The namespace with id {node_id} is already part of a wireless network.")
-        print("The namespace will be made to leave that network.")
-        WirelessInterface.leave_network(node_id)
+        logger.info(f"The namespace with name {node_name} is already part of a wireless network.")
+        logger.info("The namespace will be made to leave that network.")
+        WirelessInterface.leave_network(node_id, node_name)
 
 def create_ap(node, ssid, ap_config={}):
     """
@@ -309,7 +310,7 @@ def create_ap(node, ssid, ap_config={}):
             A Wireless Interface object that has been placed inside the node and made an AP.
     """
 
-    check_network_and_leave(node.id)
+    check_network_and_leave(node.id, node.name)
 
     # Creating an access point for making it an AP
     wlan = WirelessInterface.use_wireless_interface(node.id, "AP", ssid)
@@ -333,8 +334,7 @@ def create_ap(node, ssid, ap_config={}):
 
     return wlan
 
-# TODO: Make it possible to join BSS by passing the SSID, instead of the AP object.
-def join_bss(list_of_nodes, access_point, sta_config={}):
+def join_bss(list_of_nodes, access_point: Node, sta_config={}):
     """
     Makes the given list of nodes join the BSS having the given 'ap' as the Access Point.
 
@@ -342,8 +342,8 @@ def join_bss(list_of_nodes, access_point, sta_config={}):
     ----------
         list_of_nodes: list(node)
             A list of 'Node' objects, that should join the BSS.
-        ap: WirelessInterface
-            The wireless interface corresponding to the node that is acting as Access Point.
+        access_point: Node
+            The node that is acting as Access Point.
         config: dict
             An optional python dictionary that holds values of various configuration parameters
             like 'key_mgmt', 'psk' etc. In its absence, default values are used.
@@ -357,11 +357,18 @@ def join_bss(list_of_nodes, access_point, sta_config={}):
     """
 
     # Suppose the access point parameter is passed as a string, indicating the ssid of the network
-    if(isinstance(access_point, str)):
+    ssid_passed = isinstance(access_point, str)
+    if(ssid_passed):
         ssid = access_point
         access_point = WirelessTopologyMap.return_ap(ssid)
         if access_point == None:
             raise ValueError(f"No BSS found with the SSID {ssid}")
+        ap_interface = access_point
+
+    else:
+        is_ap, ap_interface = WirelessTopologyMap.is_ap(access_point.id)
+        if not is_ap:
+            raise ValueError(f"The specified node {access_point.id} is not an Access Point.")
 
     # Checking if the variable is a list
     if not isinstance(list_of_nodes, list):
@@ -370,14 +377,14 @@ def join_bss(list_of_nodes, access_point, sta_config={}):
     # Building the wpa_supplicant conf file
     lines = wpa_supplicant_conf.split("\n")
     bssid = lines[1].split("=")
-    bssid[1] = f"{access_point.mac_address}"
+    bssid[1] = f"{ap_interface.mac_address}"
     lines[1] = "=".join(bssid)
     if "psk" in sta_config:
         password = lines[3].split("=")
         psk = sta_config["psk"]
         password[1] = f'"{psk}"'
         lines[3] = "=".join(password)
-    with open(f"wpa_supplicant_{access_point.mac_address}.conf", "w") as file:
+    with open(f"wpa_supplicant_{ap_interface.mac_address}.conf", "w") as file:
         for line in lines:
             file.write(line + "\n")
 
@@ -385,13 +392,15 @@ def join_bss(list_of_nodes, access_point, sta_config={}):
     wlans = []
     for node in list_of_nodes:
         # Creating a wireless interface in that node to connect it to the network
-        check_network_and_leave(node.id)
+        check_network_and_leave(node.id, node.name)
         wlan = WirelessInterface.use_wireless_interface(
-            node.id, "managed", access_point.ssid
+            node.id, "managed", ap_interface.ssid
         )
-        engine.join_bss(access_point.mac_address, wlan.id, wlan.node_id)
+        engine.join_bss(ap_interface.mac_address, wlan.id, wlan.node_id)
         wlans.append(wlan)
-        WirelessTopologyMap.add_station_to_bss(access_point.node_id, wlan)
+        WirelessTopologyMap.add_station_to_bss(ap_interface.node_id, wlan)
+
+    time.sleep(2)
     return wlans
 
 
@@ -427,7 +436,7 @@ def join_adhoc_network(list_of_nodes, ssid, frequency=2412):
 
     # Creating wireless interfaces and adding it to the adhoc network one by one
     for node in list_of_nodes:
-        check_network_and_leave(node.id)
+        check_network_and_leave(node.id, node.name)
         wlan = WirelessInterface.use_wireless_interface(
             node.id, "ibss", ssid, frequency
         )
@@ -435,6 +444,8 @@ def join_adhoc_network(list_of_nodes, ssid, frequency=2412):
         engine.join_ibss(wlan.id, ssid, frequency, wlan.node_id)
         wlans.append(wlan)
         WirelessTopologyMap.add_station_to_ibss(ssid, wlan)
+    
+    time.sleep(2)
     return wlans
 
 
@@ -471,7 +482,7 @@ def create_adhoc_network(list_of_nodes, ssid, frequency=2412):
         return None
 
     # Creating wireless interfaces and starting the adhoc network
-    check_network_and_leave(list_of_nodes[0].id)
+    check_network_and_leave(list_of_nodes[0].id, list_of_nodes[0].name)
     wlan = WirelessInterface.use_wireless_interface(
         list_of_nodes[0].id, "ibss", ssid, frequency
     )
@@ -484,14 +495,14 @@ def create_adhoc_network(list_of_nodes, ssid, frequency=2412):
     # Pausing the execution of the program for a while as if two interfaces invoke the command
     # for starting an ibss with almost no delay then kernel will create two seprate ibss with
     # the same ssid and the nodes will not be able to reach each other
-    print("Ad Hoc network being created. Please wait...")
+    logger.info("Ad Hoc network being created. Please wait...")
     time.sleep(20)
     # TODO: Find the optimum delay to be given, or find a different workaround
     # Taking upto 10 seconds for it to work correctly
 
     # Creating wireless interfaces and adding it to the adhoc network one by one
     for i in range(1, len(list_of_nodes)):
-        check_network_and_leave(list_of_nodes[i].id)
+        check_network_and_leave(list_of_nodes[i].id, list_of_nodes[i].name)
         wlan = WirelessInterface.use_wireless_interface(
             list_of_nodes[i].id, "ibss", ssid, frequency
         )
@@ -499,6 +510,8 @@ def create_adhoc_network(list_of_nodes, ssid, frequency=2412):
         engine.join_ibss(wlan.id, ssid, frequency, wlan.node_id)
         wlans.append(wlan)
         WirelessTopologyMap.add_station_to_ibss(ssid, wlan)
+    
+    time.sleep(2)
     return wlans
 
 # TODO: Kill the hostapd and wpa_supplicant processes at the end of the program

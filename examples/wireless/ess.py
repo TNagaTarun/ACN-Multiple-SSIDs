@@ -12,30 +12,36 @@ from nest.topology import *
 # Five ping packets are sent from sta1 to sta2, 
 # and the success/failure of these packets is reported.
 
+# Configure the maximum number of wireless interfaces that will be used in the topology.
+# It is 10 by default.
+config.set_value("max_wireless_interface_count", 4)
+
 # Create 4 hosts, ap1, ap2, sta1 and sta2
-ap1 = Node('ap1')
-ap2 = Node('ap2')
-sta1 = Node('sta1')
-sta2 = Node('sta2')
+ap1 = AccessPoint('ap1')
+ap2 = AccessPoint('ap2')
+sta1 = WifiStation('sta1')
+sta2 = WifiStation('sta2')
 
 # Connecting a virtual ethernet cable between ap1 and ap2
 (eth1, eth2) = connect(ap1, ap2)
 
-# Creating access points at ap1 and ap2
-wlan_ap1 = create_ap(ap1, "ExampleESS")
-wlan_ap2 = create_ap(ap2, "ExampleESS")
-
-# make sta1 and sta2 join the respective BSS networks
-[wlan_sta1] = join_bss(sta1, wlan_ap1)
-[wlan_sta2] = join_bss(sta2, wlan_ap2)
-
 # Assign IP addresses according to subnets
-wlan_ap1.address = '10.0.0.1/24'
-wlan_ap2.address = '10.0.1.1/24'
-wlan_sta1.address = '10.0.0.2/24'
-wlan_sta2.address = '10.0.1.2/24'
+ap1.address = '10.0.0.1/24'
+ap2.address = '10.0.1.1/24'
+sta1.address = '10.0.0.2/24'
+sta2.address = '10.0.1.2/24'
 eth1.address = '10.0.2.1/24'
 eth2.address = '10.0.2.2/24'
+
+# Assigning SSIDs and activating access points at ap1 and ap2
+ap1.ssid = "ExampleESS"
+ap2.ssid = "ExampleESS"
+wlan_ap1 = ap1.start()
+wlan_ap2 = ap2.start()
+
+# Make sta1 and sta2 join the respective BSS networks
+wlan_sta1 = sta1.join_bss(ap1)
+wlan_sta2 = sta2.join_bss(ap2)
 
 # Enabling IP forwarding in ap1 and ap2
 ap1.enable_ip_forwarding()
@@ -50,5 +56,5 @@ ap1.add_route('10.0.1.2', eth1)
 ap2.add_route('10.0.0.2', eth2)
 
 # Ping from sta1 to sta2
-sta1.ping('10.0.1.2')
+sta1.ping(sta2.address)
 
