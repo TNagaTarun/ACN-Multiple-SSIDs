@@ -6,7 +6,7 @@
 import logging
 
 from nest.topology.node import Node
-from nest.topology.wireless_interface import create_ap
+from nest.topology.interface.wireless_interface import create_ap
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,6 @@ class AccessPoint(Node):
         A dictionary holding the hostapd parameters for configuring the Access Point.
     address: str or Address
         The IP address of the Access Point.
-    active: boolean
-        Whether the AP is active or not.
     """
 
     def __init__(self, name):
@@ -42,12 +40,12 @@ class AccessPoint(Node):
         self._ssid = "MyBSS"
         self._configs = {}
         self._address = ""
-        self._active = False
-        
+        self._ap_wl_int = None
+
     @property
     def ssid(self):
         """
-        Getter for the SSID of the BSS network 
+        Getter for the SSID of the BSS network
         associated with the Access Point
         """
         return self._ssid
@@ -68,30 +66,18 @@ class AccessPoint(Node):
         """
         return self._address
 
-    @property
-    def active(self):
-        """
-        Getter for whether the AP is active or not
-        """
-        return self._active
-    
-    @ssid.setter
-    def ssid(self, ssid):
+    def set_ssid(self, ssid):
         """
         To set the SSID of the BSS network.
 
         Parameters
         ----------
         ssid: str
-            The SSID to be set for the BSS network 
+            The SSID to be set for the BSS network
         """
-        if self._active:
-            raise ValueError("The SSID of the AP cannot be changed while it is active.")
-
         self._ssid = ssid
 
-    @configs.setter
-    def configs(self, configs):
+    def set_configs(self, configs):
         """
         To set the hostapd configs for the Access Point
 
@@ -100,23 +86,7 @@ class AccessPoint(Node):
         configs: dict
             A dictionary holding the hostapd configs for the Access Point
         """
-        if self._active:
-            raise ValueError("The config of the AP cannot be changed while it is active.")
         self._configs = configs
-
-    @address.setter
-    def address(self, address):
-        """
-        Assigns IP address to the access point
-
-        Parameters
-        ----------
-        address : Address or str
-            IP address to be assigned to the interface
-        """
-        if self._active:
-            raise ValueError("The IP address of the AP cannot be changed while it is active.")
-        self._address = address
 
     def set_address(self, address):
         """
@@ -127,42 +97,32 @@ class AccessPoint(Node):
         address : Address or str
             IP address to be assigned to the interface
         """
-        if self._active:
-            raise ValueError("The IP address of the AP cannot be changed while it is active.")
         self._address = address
+        if self._ap_wl_int is not None:
+            self._ap_wl_int.set_address(address)
 
     def start(self):
         """
-        Installs a wireless interface in the Access Point, activates the access point 
+        Installs a wireless interface in the Access Point, activates the access point
         and starts a BSS network, into which other wifi stations can connect.
 
         Returns
         -------
-        WirelessInterface 
+        WirelessInterface
             Returns the Wireless Interface object that is installed in the Access Point.
-            This object may be used for setting IP address to the AP, and for routing purposes. 
+            This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        if self._active is True:
-            raise ValueError(f"The Access Point {self.id} is already active.")
+        self._ap_wl_int = create_ap(self, self._ssid, self._configs)
+        if self._address != "":
+            self._ap_wl_int.set_address(self._address)
 
-        if self._address == "":
-            raise ValueError(f"IP address of the AP {self.id} is not set.")
-
-        self._ap_wlan = create_ap(self, self._ssid, self._configs)
-        self._ap_wlan.address = self._address
-        self._active = True
-
-        return self._ap_wlan
+        return self._ap_wl_int
 
     def stop(self):
         """
-        The node stops acting as an Access Point, 
+        The node stops acting as an Access Point,
         and the BSS network associated with it gets dissolved.
         """
 
-        if self._active is False:
-            raise ValueError(f"The Access Point {self.id} has not been activated.")
-
-        self._ap_wlan.delete_ap()
-        self._active = False
+        self._ap_wl_int.delete_ap(self.name)

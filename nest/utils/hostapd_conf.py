@@ -1,3 +1,8 @@
+"""
+The default hostapd configurations that are used when a 
+wireless interface is made a wifi access point.
+"""
+
 hostapd_conf = {
     "interface": "wlan0",
     "ssid": "simplewifi",

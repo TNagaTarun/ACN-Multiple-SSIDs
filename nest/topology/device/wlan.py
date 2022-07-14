@@ -4,17 +4,15 @@
 """API related to wireless devices in topology"""
 
 import logging
-from nest import engine
+from nest import config
 from nest.topology.device import Device
-import nest.global_variables as g_var
-from .address import Address
 
 logger = logging.getLogger(__name__)
 
 # pylint: disable=too-many-arguments
 
 
-class Wlan:
+class Wlan(Device):
     """
     This is a wireless device, used in wireless interfaces.
 
@@ -55,10 +53,15 @@ class Wlan:
             The channel frequency (MHz) at which the interface communicates.
         """
 
-        # super().__init__(name, node_id)
-        self._name = name
-        self._node_id = node_id
-        self._address = None
+        # The `id` of a wlan Device must be same as its `name`.
+        # This is achieved when the "asssign_random_names" config is set to False
+        assign_random_names = config.get_value("assign_random_names")
+        if assign_random_names:
+            config.set_value("assign_random_names", False)
+        super().__init__(name, node_id)
+        if assign_random_names:
+            config.set_value("assign_random_names", True)
+
         self._type = wlan_type
         self._ssid = ssid
         self._frequency = frequency
@@ -70,33 +73,7 @@ class Wlan:
         Getter for the IP address associated
         with the interface
         """
-        return self._address
-
-    @address.setter
-    def address(self, address):
-        """
-        Assigns IP address to an interface
-
-        Parameters
-        ----------
-        address : Address or str
-            IP address to be assigned to the interface
-        """
-        if isinstance(address, str):
-            address = Address(address)
-
-        if self.node_id is not None:
-            engine.assign_ip(self.node_id, self.name, address.get_addr())
-            self._address = address
-        else:
-            # TODO: Create our own error class
-            raise NotImplementedError(
-                "You should assign the interface to node or router before assigning address to it."
-            )
-
-        # Global variable to check if address is ipv6 or not for DAD check
-        if address.is_ipv6() is True:
-            g_var.IS_IPV6 = True
+        return super().get_address()
 
     @property
     def mac_address(self):
@@ -126,18 +103,23 @@ class Wlan:
         """
         return self._ssid
 
-    @property
-    def name(self):
+    @type.setter
+    def type(self, type):       # pylint: disable=redefined-builtin
         """
-        Getter for the name of the wireless interface, like 'wlan0', 'wlan1' etc.
+        Setter for the type of the wireless interface
         """
-        # return super().name
-        return self._name
+        self._type = type
 
-    @property
-    def node_id(self):
+    @frequency.setter
+    def frequency(self, freq):
         """
-        Getter for the id of the node that the wireless interface is present in.
+        Setter for the frequency in MHz of the wireless interface
         """
-        # return super().node_id
-        return self._node_id
+        self._frequency = freq
+
+    @ssid.setter
+    def ssid(self, ssid):
+        """
+        Setter for the SSID that the wireless interface is part of
+        """
+        self._ssid = ssid

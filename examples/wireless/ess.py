@@ -4,6 +4,7 @@
 ########################
 # SHOULD BE RUN AS ROOT
 ########################
+from nest import config
 from nest.topology import *
 
 # This program emulates an Extended Service Set (ESS) with two Basic Service Sets (BSS).
@@ -26,16 +27,16 @@ sta2 = WifiStation('sta2')
 (eth1, eth2) = connect(ap1, ap2)
 
 # Assign IP addresses according to subnets
-ap1.address = '10.0.0.1/24'
-ap2.address = '10.0.1.1/24'
-sta1.address = '10.0.0.2/24'
-sta2.address = '10.0.1.2/24'
-eth1.address = '10.0.2.1/24'
-eth2.address = '10.0.2.2/24'
+ap1.set_address('10.0.0.1/24')
+ap2.set_address('10.0.1.1/24')
+sta1.set_address('10.0.0.2/24')
+sta2.set_address('10.0.1.2/24')
+eth1.set_address('10.0.2.1/24')
+eth2.set_address('10.0.2.2/24')
 
 # Assigning SSIDs and activating access points at ap1 and ap2
-ap1.ssid = "ExampleESS"
-ap2.ssid = "ExampleESS"
+ap1.set_ssid("ExampleESS")
+ap2.set_ssid("ExampleESS")
 wlan_ap1 = ap1.start()
 wlan_ap2 = ap2.start()
 
@@ -48,8 +49,6 @@ ap1.enable_ip_forwarding()
 ap2.enable_ip_forwarding()
 
 # Adding routing directions
-# TODO: Need to change the input validator of add_route 
-# for the second parameter to accept topology.WirelessInterface objects also.
 sta1.add_route('DEFAULT', wlan_sta1, '10.0.0.1')
 sta2.add_route('DEFAULT', wlan_sta2, '10.0.1.1')
 ap1.add_route('10.0.1.2', eth1)

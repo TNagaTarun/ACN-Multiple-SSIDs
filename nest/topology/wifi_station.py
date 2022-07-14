@@ -7,10 +7,12 @@ import logging
 
 from nest.topology.access_point import AccessPoint
 from nest.topology.node import Node
-from nest.topology.wireless_interface import WirelessInterface
-from nest.topology.wireless_interface import create_adhoc_network, join_adhoc_network, join_bss
+from nest.topology.interface.wireless_interface import leave_wireless_network, join_bss
+from nest.topology.interface.wireless_interface import start_adhoc_network, join_adhoc_network
 
 logger = logging.getLogger(__name__)
+
+# pylint: disable=unbalanced-tuple-unpacking 
 
 
 class WifiStation(Node):
@@ -46,15 +48,16 @@ class WifiStation(Node):
         self._type = ""
         self._active = False
         self._address = ""
+        self._sta_wl_int = None
 
     @property
     def ssid(self):
         """
-        Getter for the SSID of the wireless network 
+        Getter for the SSID of the wireless network
         associated with the wifi station
         """
         return self._ssid
-    
+
     @property
     def address(self):
         """
@@ -62,18 +65,6 @@ class WifiStation(Node):
         with the wifi station
         """
         return self._address
-
-    @address.setter
-    def address(self, address):
-        """
-        Assigns IP address to the access point
-
-        Parameters
-        ----------
-        address : Address or str
-            IP address to be assigned to the interface
-        """
-        self._address = address
 
     def set_address(self, address):
         """
@@ -86,13 +77,16 @@ class WifiStation(Node):
         """
         self._address = address
 
-    def join_bss(self, ap: AccessPoint, configs={}):
+        if self._sta_wl_int is not None:
+            self._sta_wl_int.set_address(address)
+
+    def join_bss(self, acc_pnt: AccessPoint, configs={}):    # pylint: disable=dangerous-default-value
         """
         Function for the wifi station to join a BSS network, specified by the given AP
 
         PARAMETERS
         ----------
-        ap: AccessPoint
+        acc_pnt: AccessPoint
             The access point whose network the station should join
         configs: dict
             An optional python dictionary that holds values of various configuration parameters
@@ -100,25 +94,20 @@ class WifiStation(Node):
 
         RETURNS
         -------
-        WirelessInterface 
+        WirelessInterface
             Returns the Wireless Interface object that is installed in the Wifi Station.
             This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        if not ap.active:
-            raise ValueError("The Access Point that you have specified is not active.")
+        [self._sta_wl_int] = join_bss(self, acc_pnt, configs)
 
-        if self._address == "":
-            raise ValueError(f"IP address of the station {self.id} is not set.")
-
-        [self._sta_wlan] = join_bss(self, ap, configs)
-
-        self._sta_wlan.address = self._address
-        self._ssid = ap.ssid 
+        if self._address != "":
+            self._sta_wl_int.set_address(self._address)
+        self._ssid = acc_pnt if isinstance(acc_pnt, str) else acc_pnt.ssid
         self._active = True
         self._type = "bss"
 
-        return self._sta_wlan
+        return self._sta_wl_int
 
     def start_adhoc_network(self, ssid, frequency=2412):
         """
@@ -134,21 +123,19 @@ class WifiStation(Node):
 
         RETURNS
         -------
-        WirelessInterface 
+        WirelessInterface
             Returns the Wireless Interface object that is installed in the Wifi Station.
             This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        if self._address == "":
-            raise ValueError(f"IP address of the station {self.id} is not set.")
-
-        [self._sta_wlan] = create_adhoc_network(self, ssid, frequency)
-        self._sta_wlan.address = self._address
-        self._ssid = ssid 
+        [self._sta_wl_int] = start_adhoc_network(self, ssid, frequency)
+        if self._address != "":
+            self._sta_wl_int.set_address(self._address)
+        self._ssid = ssid
         self._active = True
-        self._type = "bss"
+        self._type = "ibss"
 
-        return self._sta_wlan
+        return self._sta_wl_int
 
     def join_adhoc_network(self, ssid, frequency=2412):
         """
@@ -164,32 +151,27 @@ class WifiStation(Node):
 
         RETURNS
         -------
-        WirelessInterface 
+        WirelessInterface
             Returns the Wireless Interface object that is installed in the Wifi Station.
             This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        if self._address == "":
-            raise ValueError(f"IP address of the station {self.id} is not set.")
-
-        [self._sta_wlan] = join_adhoc_network(self, ssid, frequency)
-        self._sta_wlan.address = self._address
-        self._ssid = ssid 
+        [self._sta_wl_int] = join_adhoc_network(self, ssid, frequency)  # pylint: disable=unbalanced-tuple-unpacking
+        if self._address != "":
+            self._sta_wl_int.set_address(self._address)
+        self._ssid = ssid
         self._active = True
         self._type = "ibss"
 
-        return self._sta_wlan
-        
+        return self._sta_wl_int
 
-    def leave_network(self):
+
+    def leave_wireless_network(self):
         """
         Function for the wifi station to leave the wireless network that it is part of.
         """
 
-        if not self._active:
-            raise ValueError("The wifi station is not part of any wireless network.")
-
-        WirelessInterface.leave_network(self.id)
+        leave_wireless_network(self)
         self._ssid = ""
         self._active = False
         self._type = ""

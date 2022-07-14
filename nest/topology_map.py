@@ -127,7 +127,7 @@ class TopologyMap:
                 devices[dev_id] = device
                 if dev_id in TopologyMap.devices[DEFAULT_NAMESPACE_ID]:
                     # remove from default namespace
-                    TopologyMap.delete_device(None, dev_id)
+                    del TopologyMap.devices[DEFAULT_NAMESPACE_ID][dev_id]
 
                 TopologyMap.orphan_interfaces = TopologyMap.orphan_interfaces + 1
 

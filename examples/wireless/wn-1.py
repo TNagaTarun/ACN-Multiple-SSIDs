@@ -1,3 +1,4 @@
+import time
 from nest.topology import *
 import nest.config as config
 
@@ -17,7 +18,7 @@ config.set_value("max_wireless_interface_count", 4)
 
 # Define an AccessPoint `ap`, and set its SSID and IP address
 ap = AccessPoint('ap')
-ap.ssid = "MyBssNetwork"
+ap.set_ssid("MyBssNetwork")
 ap.set_address("10.0.0.1/24")
 
 # Activate the AP

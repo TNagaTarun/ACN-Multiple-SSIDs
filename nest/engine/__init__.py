@@ -22,5 +22,4 @@ from .tcp_modules import *
 from .tc import *
 from .t_shark import *
 from .uname import *
-from .ethtool import *
 from .wlan import *
