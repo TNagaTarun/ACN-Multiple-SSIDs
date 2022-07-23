@@ -3,6 +3,7 @@
 
 """A topology map that contains list of all wireless networks in the topology and their devices."""
 
+
 class WirelessTopologyMap:
     """
     Stores the list of all wireless networks created, and the interfaces which are part of them
@@ -101,7 +102,6 @@ class WirelessTopologyMap:
                     WirelessTopologyMap.remove_ibss(ibss["ssid"])
                 break
 
-
     @staticmethod
     def remove_station_from_bss(wl_int):
         """
@@ -119,7 +119,6 @@ class WirelessTopologyMap:
                 bss["stations"].remove(wl_int)
                 break
 
-
     @staticmethod
     def remove_ibss(ssid):
         """
@@ -135,7 +134,6 @@ class WirelessTopologyMap:
             if ibss["ssid"] == ssid:
                 ibss_networks.remove(ibss)
                 break
-
 
     @staticmethod
     def remove_bss(acc_pnt):

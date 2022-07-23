@@ -81,9 +81,14 @@ run unit tests:
     - pip install -e .
     - coverage --version
     - pytest --version
-    - coverage run
+    - coverage run || exit_code=$?
     - tar -cvf coverage_dump_${CI_JOB_NAME// /_}.tar .coverage_dump* > /dev/null
     - junit2html junit_report.xml test_output.html
+    - >
+        if [ $exit_code -ne 0 ];
+        then echo "Some unit tests failed. Please check coverage logs in test_output.html";
+        exit 1;
+        fi;
   artifacts:
     reports:
       junit: junit_report.xml
@@ -112,7 +117,7 @@ run examples:
     - junit2html junit_report.xml test_output.html
     - >
         if [ $exit_code -ne 0 ];
-        then echo "Some example runs failed. Please check pytest logs";
+        then echo "Some example runs failed. Please check pytest logs in test_output.html";
         exit 1;
         fi;
   rules:

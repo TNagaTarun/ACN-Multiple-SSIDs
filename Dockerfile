@@ -18,6 +18,7 @@ RUN apt -y install gawk
 RUN apt -y install libreadline6-dev
 RUN apt -y install iproute2
 RUN apt -y install iputils-ping
+RUN apt -y install iw
 
 # Install python
 RUN apt install -y python3 python3-pip python3-venv

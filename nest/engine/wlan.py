@@ -160,6 +160,7 @@ def join_ibss(interface_name, ssid, frequency, node_name):
         f"ip netns exec {node_name} iw dev {interface_name} ibss join {ssid} {frequency}"
     )
 
+
 def leave_ibss(interface_name, node_name):
     """
     Makes the given wireless interface leave its ad hoc network.
@@ -172,9 +173,8 @@ def leave_ibss(interface_name, node_name):
         Name of the network namespace containing the interface
     """
 
-    exec_subprocess(
-        f"ip netns exec {node_name} iw dev {interface_name} ibss leave"
-    )
+    exec_subprocess(f"ip netns exec {node_name} iw dev {interface_name} ibss leave")
+
 
 def set_wlan_type(interface_name, node_name, wlan_type):
     """

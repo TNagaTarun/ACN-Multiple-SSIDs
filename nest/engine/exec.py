@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 # pylint: disable=inconsistent-return-statements
 # pylint: disable=consider-using-with
 
+
 def exec_subprocess(cmd, shell=False, output=False):
     """
     Executes a command
@@ -176,6 +177,7 @@ def exec_subprocess_in_background(cmd, shell=False, wait_for_exit_code=False):
 
     return 0
 
+
 def exec_async_commands(cmd, stdout=DEVNULL, stderr=DEVNULL):
     """
     executes server related commands
@@ -195,7 +197,7 @@ def exec_async_commands(cmd, stdout=DEVNULL, stderr=DEVNULL):
         Return code received after executing the command
     """
     proc = Popen(shlex.split(cmd), stdout=stdout, stderr=stderr)
-    logger.trace(cmd)   # pylint: disable=consider-using-with
+    logger.trace(cmd)  # pylint: disable=consider-using-with
     try:
         proc.poll()
     except subprocess.TimeoutExpired:

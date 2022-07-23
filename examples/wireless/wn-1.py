@@ -6,7 +6,7 @@ import nest.config as config
 # Emulating wireless networks
 ##############################
 
-# This program emulates wireless networks in NeST by building a topology 
+# This program emulates wireless networks in NeST by building a topology
 # consisting of one Basic Service Set (BSS)
 # and an Independent Basic Service Set (IBSS) / Ad Hoc Network
 
@@ -17,7 +17,7 @@ config.set_value("max_wireless_interface_count", 4)
 ### Demonstrating BSS ###
 
 # Define an AccessPoint `ap`, and set its SSID and IP address
-ap = AccessPoint('ap')
+ap = AccessPoint("ap")
 ap.set_ssid("MyBssNetwork")
 ap.set_address("10.0.0.1/24")
 
@@ -25,7 +25,7 @@ ap.set_address("10.0.0.1/24")
 ap.start()
 
 # Define a Wifi Station `sta1`, and set its IP address
-sta1 = WifiStation('sta1')
+sta1 = WifiStation("sta1")
 sta1.set_address("10.0.0.2/24")
 
 # Make the station join the BSS associated with ap
@@ -38,8 +38,8 @@ ap.ping(sta1.address)
 ### Demonstrating IBSS / Ad-Hoc Network ###
 
 # Define 2 Wifi Stations, `sta2` and `sta3`, and set their IP addresses
-sta2 = WifiStation('sta2')
-sta3 = WifiStation('sta3')
+sta2 = WifiStation("sta2")
+sta3 = WifiStation("sta3")
 sta2.set_address("10.0.1.1/24")
 sta3.set_address("10.0.1.2/24")
 

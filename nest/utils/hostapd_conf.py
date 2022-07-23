@@ -1,5 +1,5 @@
 """
-The default hostapd configurations that are used when a 
+The default hostapd configurations that are used when a
 wireless interface is made a wifi access point.
 """
 

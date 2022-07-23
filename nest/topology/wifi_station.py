@@ -8,11 +8,14 @@ import logging
 from nest.topology.access_point import AccessPoint
 from nest.topology.node import Node
 from nest.topology.interface.wireless_interface import leave_wireless_network, join_bss
-from nest.topology.interface.wireless_interface import start_adhoc_network, join_adhoc_network
+from nest.topology.interface.wireless_interface import (
+    start_adhoc_network,
+    join_adhoc_network,
+)
 
 logger = logging.getLogger(__name__)
 
-# pylint: disable=unbalanced-tuple-unpacking 
+# pylint: disable=unbalanced-tuple-unpacking
 
 
 class WifiStation(Node):
@@ -80,7 +83,9 @@ class WifiStation(Node):
         if self._sta_wl_int is not None:
             self._sta_wl_int.set_address(address)
 
-    def join_bss(self, acc_pnt: AccessPoint, configs={}):    # pylint: disable=dangerous-default-value
+    def join_bss(
+        self, acc_pnt: AccessPoint, configs={}
+    ):  # pylint: disable=dangerous-default-value
         """
         Function for the wifi station to join a BSS network, specified by the given AP
 
@@ -156,7 +161,8 @@ class WifiStation(Node):
             This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        [self._sta_wl_int] = join_adhoc_network(self, ssid, frequency)  # pylint: disable=unbalanced-tuple-unpacking
+        # pylint: disable=unbalanced-tuple-unpacking
+        [self._sta_wl_int] = join_adhoc_network(self, ssid, frequency)
         if self._address != "":
             self._sta_wl_int.set_address(self._address)
         self._ssid = ssid
@@ -164,7 +170,6 @@ class WifiStation(Node):
         self._type = "ibss"
 
         return self._sta_wl_int
-
 
     def leave_wireless_network(self):
         """

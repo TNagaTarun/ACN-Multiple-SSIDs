@@ -110,7 +110,7 @@ class WirelessInterface(BaseInterface):
         self._wlan.frequency = freq
 
     @type.setter
-    def type(self, type):       # pylint: disable=redefined-builtin
+    def type(self, type):  # pylint: disable=redefined-builtin
         """
         Setter for the type of the interface.
 
@@ -245,7 +245,9 @@ class WirelessInterface(BaseInterface):
 
         # Remove all the stations of this BSS.
         logger.info(f"Disconnecting Access Point in node {node_name}.")
-        logger.info("Since you are removing an AP, all its stations will also get disconnected.")
+        logger.info(
+            "Since you are removing an AP, all its stations will also get disconnected."
+        )
         stations = WirelessTopologyMap.get_bss_stations(self)
         for station in stations:
             station.leave_bss(station.node_id)
@@ -283,6 +285,7 @@ class WirelessInterface(BaseInterface):
         WirelessTopologyMap.remove_station_from_ibss(self)
         self.free_wireless_interface()
 
+
 def check_network_and_leave(node):
     """
     Check if the given node is part of a wireless network, and if yes, leave that network.
@@ -293,9 +296,12 @@ def check_network_and_leave(node):
         The Node object
     """
     if WirelessTopologyMap.is_part_of_network(node.id):
-        logger.info(f"The namespace {node.name} is already part of a wireless network, "
-        "and so will be made to leave that network.")
+        logger.info(
+            f"The namespace {node.name} is already part of a wireless network, "
+            "and so will be made to leave that network."
+        )
         leave_wireless_network(node)
+
 
 def leave_wireless_network(node):
     """
@@ -325,9 +331,12 @@ def leave_wireless_network(node):
         logger.info(f"Node {node.name} leaving its ad hoc network.")
         return
 
-    raise ValueError(f"Namespace with name {node.name} isn't part of a wireless network")
+    raise ValueError(
+        f"Namespace with name {node.name} isn't part of a wireless network"
+    )
 
-def create_ap(node, ssid, ap_config={}):    # pylint: disable=dangerous-default-value
+
+def create_ap(node, ssid, ap_config={}):  # pylint: disable=dangerous-default-value
     """
     Creates a wireless interface inside the given node, and makes it an Access Point.
 
@@ -373,9 +382,12 @@ def create_ap(node, ssid, ap_config={}):    # pylint: disable=dangerous-default-
 
     return wlan
 
+
 # BSS can be joined by either passing the access_point (node) object, or by passing SSID
 # pylint: disable=too-many-locals
-def join_bss(list_of_nodes, access_point, sta_config={}): # pylint: disable=dangerous-default-value
+def join_bss(
+    list_of_nodes, access_point, sta_config={}
+):  # pylint: disable=dangerous-default-value
     """
     Makes the given list of nodes join the BSS having the given 'ap' as the Access Point.
 
@@ -409,7 +421,9 @@ def join_bss(list_of_nodes, access_point, sta_config={}): # pylint: disable=dang
     else:
         is_ap, ap_interface = WirelessTopologyMap.is_ap(access_point.id)
         if not is_ap:
-            raise ValueError(f"The specified node {access_point.name} is not an Access Point.")
+            raise ValueError(
+                f"The specified node {access_point.name} is not an Access Point."
+            )
 
     # Checking if the variable is a list
     if not isinstance(list_of_nodes, list):
@@ -444,7 +458,9 @@ def join_bss(list_of_nodes, access_point, sta_config={}): # pylint: disable=dang
         if ssid_passed:
             logger.info(f"Node {node.name} has joined the BSS {ssid}.")
         else:
-            logger.info(f"Node {node.name} has joined the BSS of node {access_point.name}.")
+            logger.info(
+                f"Node {node.name} has joined the BSS of node {access_point.name}."
+            )
 
     time.sleep(2)
     return wlans
@@ -544,7 +560,9 @@ def start_adhoc_network(list_of_nodes, ssid, frequency=2412):
     # the same ssid and the nodes will not be able to reach each other
     logger.info("Ad Hoc network being created. Please wait...")
     time.sleep(20)
-    logger.info(f"Ad Hoc network {ssid} has been created with node {list_of_nodes[0].name}.")
+    logger.info(
+        f"Ad Hoc network {ssid} has been created with node {list_of_nodes[0].name}."
+    )
     # TODO: Find the optimum delay to be given, or find a different workaround
     # Taking upto 20 seconds for it to work correctly every time
 
@@ -558,9 +576,12 @@ def start_adhoc_network(list_of_nodes, ssid, frequency=2412):
         engine.join_ibss(wlan.id, ssid, frequency, wlan.node_id)
         wlans.append(wlan)
         WirelessTopologyMap.add_station_to_ibss(ssid, wlan)
-        logger.info(f"Node {list_of_nodes[i].name} has joined the Ad Hoc Network {ssid}.")
+        logger.info(
+            f"Node {list_of_nodes[i].name} has joined the Ad Hoc Network {ssid}."
+        )
 
     time.sleep(2)
     return wlans
+
 
 # TODO: Kill the hostapd and wpa_supplicant processes at the end of the program

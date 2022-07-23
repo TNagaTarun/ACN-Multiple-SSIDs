@@ -62,6 +62,7 @@ def delete_namespaces():
     else:
         logger.info("Namespaces not deleted")
 
+
 @atexit.register
 def delete_wlans():
     """

@@ -104,7 +104,7 @@ class Wlan(Device):
         return self._ssid
 
     @type.setter
-    def type(self, type):       # pylint: disable=redefined-builtin
+    def type(self, type):  # pylint: disable=redefined-builtin
         """
         Setter for the type of the wireless interface
         """

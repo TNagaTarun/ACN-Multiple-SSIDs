@@ -1,5 +1,5 @@
 """
-The default wpa_supplicant configurations that are used when a 
+The default wpa_supplicant configurations that are used when a
 wireless interface is made to join a BSS.
 """
 

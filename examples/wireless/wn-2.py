@@ -7,9 +7,9 @@ import nest.config as config
 ##############################
 
 # Define 3 namespaces
-n1 = Node('n1')
-n2 = Node('n2')
-n3 = Node('n3')
+n1 = Node("n1")
+n2 = Node("n2")
+n3 = Node("n3")
 
 # Configure the maximum number of wireless interfaces that will be used in the topology.
 # It is 10 by default.
