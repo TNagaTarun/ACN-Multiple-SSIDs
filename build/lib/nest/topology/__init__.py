@@ -26,7 +26,7 @@ from .router import Router
 from .switch import Switch
 from .interface.wireless_interface import create_ap, join_bss, start_adhoc_network
 from .interface.wireless_interface import join_adhoc_network, leave_wireless_network
-from .access_point import AccessPoint,VirtualAccessPoint
+from .access_point import AccessPoint
 from .wifi_station import WifiStation
 
 # pylint: disable=cyclic-import

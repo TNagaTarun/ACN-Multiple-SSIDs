@@ -5,9 +5,9 @@
 
 import logging
 
-from nest.topology.access_point import AccessPoint, VirtualAccessPoint
+from nest.topology.access_point import AccessPoint
 from nest.topology.node import Node
-from nest.topology.interface.wireless_interface import leave_wireless_network, join_bss, join_bss_virtual
+from nest.topology.interface.wireless_interface import leave_wireless_network, join_bss
 from nest.topology.interface.wireless_interface import (
     start_adhoc_network,
     join_adhoc_network,
@@ -84,7 +84,7 @@ class WifiStation(Node):
             self._sta_wl_int.set_address(address)
 
     def join_bss(
-        self, acc_pnt, configs={}
+        self, acc_pnt: AccessPoint, configs={}
     ):  # pylint: disable=dangerous-default-value
         """
         Function for the wifi station to join a BSS network, specified by the given AP
@@ -104,48 +104,13 @@ class WifiStation(Node):
             This object may be used for setting IP address to the AP, and for routing purposes.
         """
 
-        self._sta_wl_int = join_bss(self, acc_pnt, configs)
-        
+        [self._sta_wl_int] = join_bss(self, acc_pnt, configs)
+
         if self._address != "":
             self._sta_wl_int.set_address(self._address)
         self._ssid = acc_pnt if isinstance(acc_pnt, str) else acc_pnt.ssid
         self._active = True
         self._type = "bss"
-
-        
-
-        return self._sta_wl_int
-    
-    def join_bss_virtual(
-        self, acc_pnt, configs={}
-    ):  # pylint: disable=dangerous-default-value
-        """
-        Function for the wifi station to join a BSS network, specified by the given AP
-
-        PARAMETERS
-        ----------
-        acc_pnt: AccessPoint
-            The access point whose network the station should join
-        configs: dict
-            An optional python dictionary that holds values of various configuration parameters
-            like 'key_mgmt', 'psk' etc. In its absence, default values are used.
-
-        RETURNS
-        -------
-        WirelessInterface
-            Returns the Wireless Interface object that is installed in the Wifi Station.
-            This object may be used for setting IP address to the AP, and for routing purposes.
-        """
-
-        self._sta_wl_int = join_bss_virtual(self, acc_pnt, configs)
-        
-        if self._address != "":
-            self._sta_wl_int.set_address(self._address)
-        self._ssid = acc_pnt if isinstance(acc_pnt, str) else acc_pnt.ssid
-        self._active = True
-        self._type = "bss"
-
-        
 
         return self._sta_wl_int
 

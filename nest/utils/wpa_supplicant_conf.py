@@ -8,3 +8,9 @@ WPA_SUPPLICANT_CONF = """network={
     key_mgmt=WPA-PSK
     psk="123456789a"
 }"""
+
+WPA_SUPPLICANT_CONF_Virtual = """network={
+    ssid=02:00:00:00:00:00
+    key_mgmt=WPA-PSK
+    psk="123456789a"
+}"""

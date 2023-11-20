@@ -195,6 +195,3 @@ def set_mtu_interface(ns_name, dev_name, mtu_value):
         logger.error(
             "MTU of interface %s wasn't set to %s!", str(dev_name), str(mtu_value)
         )
-
-def assign_mac_address(ns_name, dev_name, mac_address):
-    exec_subprocess(f"ip netns exec {ns_name} ip link set dev {dev_name} address {mac_address}")

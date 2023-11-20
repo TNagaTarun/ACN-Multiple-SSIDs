@@ -193,6 +193,3 @@ def set_wlan_type(interface_name, node_name, wlan_type):
     exec_subprocess(
         f"ip netns exec {node_name} iw dev {interface_name} set type {wlan_type}"
     )
-
-def set_virtual_interface(ns_name, dev_name, interface_name, interface_type):
-     exec_subprocess(f"ip netns exec {ns_name} iw dev {dev_name} interface add {interface_name} type {interface_type}")

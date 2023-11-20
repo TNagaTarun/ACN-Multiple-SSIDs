@@ -12,7 +12,6 @@ from nest.topology.interface.base_interface import BaseInterface
 from nest.topology_map import TopologyMap
 from nest.utils.hostapd_conf import hostapd_conf
 from nest.utils.wpa_supplicant_conf import WPA_SUPPLICANT_CONF as wpa_supplicant_conf
-from nest.utils.wpa_supplicant_conf import WPA_SUPPLICANT_CONF_Virtual as wpa_supplicant_conf_virtual
 from nest.topology.wireless_topology_map import WirelessTopologyMap
 
 logger = logging.getLogger(__name__)
@@ -383,10 +382,11 @@ def create_ap(node, ssid, ap_config={}):  # pylint: disable=dangerous-default-va
 
     return wlan
 
+
 # BSS can be joined by either passing the access_point (node) object, or by passing SSID
 # pylint: disable=too-many-locals
 def join_bss(
-    node, access_point, sta_config={}
+    list_of_nodes, access_point, sta_config={}
 ):  # pylint: disable=dangerous-default-value
     """
     Makes the given list of nodes join the BSS having the given 'ap' as the Access Point.
@@ -426,8 +426,8 @@ def join_bss(
             )
 
     # Checking if the variable is a list
-    # if not isinstance(list_of_nodes, list):
-    #     list_of_nodes = [list_of_nodes]
+    if not isinstance(list_of_nodes, list):
+        list_of_nodes = [list_of_nodes]
 
     # Building the wpa_supplicant conf file
     lines = wpa_supplicant_conf.split("\n")
@@ -444,120 +444,28 @@ def join_bss(
             file.write(line + "\n")
 
     # Adding all nodes to the network one by one
-    # wlans = []
-    # for node in list_of_nodes:
+    wlans = []
+    for node in list_of_nodes:
         # Creating a wireless interface in that node to connect it to the network
-    check_network_and_leave(node)
-    wlan = WirelessInterface.use_wireless_interface(
-        node.id, "managed", ap_interface.ssid
-    )
-    engine.join_bss(ap_interface.mac_address, wlan.id, wlan.node_id)
-    # wlans.append(wlan)
-    WirelessTopologyMap.add_station_to_bss(ap_interface.node_id, wlan)
-
-    if ssid_passed:
-        logger.info(f"Node {node.name} has joined the BSS {ssid}.")
-    else:
-        logger.info(
-            f"Node {node.name} has joined the BSS of node {access_point.name}."
-        )
-
-    time.sleep(2)
-    return wlan
-
-def join_bss_virtual(
-    node, access_point, sta_config={}
-):  # pylint: disable=dangerous-default-value
-    """
-    Makes the given list of nodes join the BSS having the given 'ap' as the Access Point.
-
-    PARAMETERS
-    ----------
-        list_of_nodes: list(node)
-            A list of 'Node' objects, that should join the BSS.
-        access_point: Node / str
-            The node that is acting as Access Point, or the SSID of the BSS to be joined
-        config: dict
-            An optional python dictionary that holds values of various configuration parameters
-            like 'key_mgmt', 'psk' etc. In its absence, default values are used.
-
-    RETURNS
-    -------
-        WirelessInterface: list(WirelessInterface)
-            A list of wireless interfaces, of the same size as the input list of nodes.
-            A wireless interface is created inside each node,
-            and these interfaces are connected to the given AP.
-    """
-
-    # Suppose the access point parameter is passed as a string, indicating the ssid of the network
-    ssid_passed = isinstance(access_point, str)
-    if ssid_passed:
-        ssid = access_point
-        access_point = WirelessTopologyMap.return_ap(ssid)
-        if access_point is None:
-            raise ValueError(f"No BSS found with the SSID {ssid}")
-        ap_interface = access_point
-
-    else:
-        ap_interface = access_point
-    #     ap_interface = WirelessTopologyMap.is_ap(access_point.id)
-    #     if not is_ap:
-    #         raise ValueError(
-    #             f"The specified node {access_point.name} is not an Access Point."
-    #         )
-
-    # Checking if the variable is a list
-    # if not isinstance(list_of_nodes, list):
-    #     list_of_nodes = [list_of_nodes]
-
-    # Building the wpa_supplicant conf file
-    lines = wpa_supplicant_conf_virtual.split("\n")
-    ssid = lines[1].split("=")
-    ssid[1] = f"{ap_interface.ssid}"
-    lines[1] = "=".join(ssid)
-    if "psk" in sta_config:
-        password = lines[3].split("=")
-        psk = sta_config["psk"]
-        password[1] = f'"{psk}"'
-        lines[3] = "=".join(password)
-    if ssid_passed:
-        with open(f"wpa_supplicant_{ap_interface.mac_address}.conf", "w") as file:
-            for line in lines:
-                file.write(line + "\n")
         check_network_and_leave(node)
         wlan = WirelessInterface.use_wireless_interface(
-        node.id, "managed", ap_interface.ssid
+            node.id, "managed", ap_interface.ssid
         )
         engine.join_bss(ap_interface.mac_address, wlan.id, wlan.node_id)
-        # wlans.append(wlan)
+        wlans.append(wlan)
         WirelessTopologyMap.add_station_to_bss(ap_interface.node_id, wlan)
-    else:
-        with open(f"wpa_supplicant_{ap_interface._ap_vl_int.mac_address}.conf", "w") as file:
-            for line in lines:
-                file.write(line + "\n")
-        check_network_and_leave(node)
-        wlan = WirelessInterface.use_wireless_interface(
-        node.id, "managed", ap_interface.ssid
-        )
-        engine.join_bss(ap_interface._ap_vl_int.mac_address, wlan.id, wlan.node_id)
-        # wlans.append(wlan)
-        WirelessTopologyMap.add_station_to_bss(ap_interface._ap_vl_int.mac_address, wlan)
 
-    # Adding all nodes to the network one by one
-    # wlans = []
-    # for node in list_of_nodes:
-        # Creating a wireless interface in that node to connect it to the network
-   
-
-    if ssid_passed:
-        logger.info(f"Node {node.name} has joined the BSS {ssid}.")
-    else:
-        logger.info(
-            f"Node {node.name} has joined the BSS of node {access_point.name}."
-        )
+        if ssid_passed:
+            logger.info(f"Node {node.name} has joined the BSS {ssid}.")
+        else:
+            logger.info(
+                f"Node {node.name} has joined the BSS of node {access_point.name}."
+            )
 
     time.sleep(2)
-    return wlan
+    return wlans
+
+
 def join_adhoc_network(list_of_nodes, ssid, frequency=2412):
     """
     Makes the given list of nodes join the existing ad hoc network of the given SSID.
